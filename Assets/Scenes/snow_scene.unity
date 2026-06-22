@@ -2856,6 +2856,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 673bba0a59fc1b14a814e5e06e969b2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  jennyOriginBase: {fileID: 104776439}
   BlenderLeftFootIK: {fileID: 320570957}
   BlenderRightFootIK: {fileID: 1743533131}
   BlenderLeftKneeIK: {fileID: 1974615146}
@@ -2868,7 +2869,7 @@ MonoBehaviour:
   rightFoot: {fileID: 1353915106}
   leftToeEnd: {fileID: 1974615141}
   rightToeEnd: {fileID: 1974615140}
-  pelvisRoot: {fileID: 0}
+  pelvisRoot: {fileID: 1867622262}
   addMovementSpeed: 13
   footCorMovementSpeed: 35
   dumby: 2
@@ -5594,6 +5595,10 @@ PrefabInstance:
     - target: {fileID: 4397697937462524722, guid: a454c9ebe608bbf47adb3c47346e5f16, type: 3}
       propertyPath: m_Layer
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4436805663696350335, guid: a454c9ebe608bbf47adb3c47346e5f16, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4454688028438708602, guid: a454c9ebe608bbf47adb3c47346e5f16, type: 3}
       propertyPath: m_Layer

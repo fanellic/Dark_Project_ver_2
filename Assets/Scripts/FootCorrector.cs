@@ -1,9 +1,11 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class FootCorrector : MonoBehaviour
 {
     [SerializeField]
     private Transform 
+        jennyOriginBase,
         BlenderLeftFootIK, 
         BlenderRightFootIK, 
         BlenderLeftKneeIK, 
@@ -48,12 +50,12 @@ public class FootCorrector : MonoBehaviour
         currentLeftAngle, 
         currentRightAngle;
     private Vector3
+        currentLocalPelvisPosition,
         currentLeftFootPosition,
-        currentRightFootPosition,
-        currentPelvisRootPosition,
-        pelvisRootInitialPosition;
+        currentRightFootPosition;
 
     private float 
+        currentPelvisYAdditive = 0,
         currentLeftFootYAdditive = 0, 
         currentRightFootYAdditive = 0;
 
@@ -63,12 +65,14 @@ public class FootCorrector : MonoBehaviour
         currentRightAngle = unityRightFootIK.rotation;
         currentLeftFootPosition = unityLeftFootIK.position;
         currentRightFootPosition = unityRightFootIK.position;
+        currentLocalPelvisPosition = pelvisRoot.localPosition;
     }
 
     private void LateUpdate()
     {
         //mainFootCorrector(jennyController.isGrounded, jennyController.movementVectorRef);
-        revampedFootCorrector(jennyController.isGrounded, jennyController.movementVectorRef);
+        //revampedFootCorrector(jennyController.isGrounded, jennyController.movementVectorRef);
+        pleaseFootCorrector(jennyController.isGrounded, jennyController.movementVectorRef);
     }
 
     private float calculateFootDisToHit(RaycastHit footHit, Vector3 blenderFootPosition)
@@ -113,29 +117,36 @@ public class FootCorrector : MonoBehaviour
     }
 
 
-    private void revampedFootCorrector(bool isGrounded, Vector2 movementVector)
+
+
+    private void pleaseFootCorrector(bool isGrounded, Vector2 movementVector)
     {
         //Set up ray cast variables
         Vector3 leftRayDirection = Vector3.down;
         Vector3 rightRayDirection = Vector3.down;
+        float maxDistance = .5f + groundAdditive;
 
         //Left Foot
         RaycastHit leftFootHit;
-        Vector3 leftFootOrigin = new Vector3(leftFoot.position.x, leftFoot.position.y, leftFoot.position.z);
+        Vector3 leftFootOrigin = new Vector3(BlenderLeftFootIK.position.x, BlenderLeftFootIK.position.y + groundAdditive, BlenderLeftFootIK.position.z);
+        float leftFootHitMaxDistance = maxDistanceTester + groundAdditive;
 
         // Right Foot
         RaycastHit rightFootHit;
-        Vector3 rightFootOrigin = new Vector3(rightFoot.position.x, rightFoot.position.y, rightFoot.position.z);
+        Vector3 rightFootOrigin = new Vector3(BlenderRightFootIK.position.x, BlenderRightFootIK.position.y + groundAdditive, BlenderRightFootIK.position.z);
+        float rightFootHitMaxDistance = maxDistanceTester + groundAdditive;
+
 
 
         //Case 1: Both feet are touching the ground (not necessarily the same ground with the same slope)
-        if (isGrounded && Physics.Raycast(leftFootOrigin, leftRayDirection, out leftFootHit, maxDistanceTester, layerMask) && Physics.Raycast(rightFootOrigin, rightRayDirection, out rightFootHit, maxDistanceTester, layerMask))
+        if (isGrounded && Physics.Raycast(leftFootOrigin, leftRayDirection, out leftFootHit, leftFootHitMaxDistance, layerMask) && Physics.Raycast(rightFootOrigin, rightRayDirection, out rightFootHit, rightFootHitMaxDistance, layerMask) && leftFootHit.transform.tag == "Walkable" && rightFootHit.transform.tag == "Walkable")
         {
+            print("hit");
             //Skirt Targeting needs this
             leftFootHitNormalRef = leftFootHit.normal;
             rightFootHitNormalRef = rightFootHit.normal;
 
-            print("hit"); 
+
             if (jennyAnimator.GetFloat("Speed") != 0)
             {
                 Debug.DrawLine(leftFootOrigin, leftFootHit.point, Color.red);
@@ -147,7 +158,8 @@ public class FootCorrector : MonoBehaviour
                 Debug.DrawLine(rightFootOrigin, rightFootHit.point, Color.red);
             }
 
-            
+            //
+
             //adjust left and right foot IK target angles
             Quaternion leftFootNewAngle = Quaternion.FromToRotation(transform.up, leftFootHit.normal) * BlenderLeftFootIK.rotation;
             unityLeftFootIK.rotation = Quaternion.Lerp(currentLeftAngle, leftFootNewAngle, Time.deltaTime * footCorRotationSpeed);
@@ -156,6 +168,7 @@ public class FootCorrector : MonoBehaviour
             unityRightFootIK.rotation = Quaternion.Lerp(currentRightAngle, rightFootNewAngle, Time.deltaTime * footCorRotationSpeed);
             currentRightAngle = unityRightFootIK.rotation;
 
+
             //set additive variables
             float newLeftFootYAdditive = 0f;
             float newRightFootYAdditive = 0f;
@@ -163,6 +176,9 @@ public class FootCorrector : MonoBehaviour
             float newRightHintYAdditive = 0f;
             float leftFootYAdditive = 0;
             float rightFootYAdditive = 0;
+            float newPelvisYAdditive = 0f;
+            float pelvisYAdditive = 0;
+
 
             //get left and right calculateFootDisToHit and footHeight
             float leftFootDisToHit = calculateFootDisToHit(leftFootHit, BlenderLeftFootIK.transform.position);
@@ -170,18 +186,21 @@ public class FootCorrector : MonoBehaviour
             float leftFootHeight = calculateFootHeight(leftFootHit, leftToeEnd, leftFoot, BlenderLeftFootIK.transform.position);
             float rightFootHeight = calculateFootHeight(rightFootHit, rightToeEnd, rightFoot, BlenderRightFootIK.transform.position);
 
-            //determine controllerCenterAdditive and which foot needs an offset
-            float controllerCenterAdditive = 0;
-            if (leftFootHit.point.y > rightFootHit.point.y)
+            float right_foot_y_delta = rightFootHit.point.y - jennyOriginBase.transform.position.y + rightFootHeight;
+            float left_foot_y_delta = leftFootHit.point.y - jennyOriginBase.transform.position.y + leftFootHeight;
+
+            if (right_foot_y_delta < left_foot_y_delta)
             {
-                controllerCenterAdditive = -rightFootDisToHit - rightFootHeight;
-                newLeftFootYAdditive = leftFootDisToHit + leftFootHeight + controllerCenterAdditive;
+                //controllerCenterAdditive = -rightFootDisToHit - rightFootHeight; CHANGE TO PELVIS AT SOMEPOINT
+                newPelvisYAdditive = right_foot_y_delta;
+                newLeftFootYAdditive = left_foot_y_delta + right_foot_y_delta;
                 newLeftHintYAdditive = calculateYHintAdditive(newLeftFootYAdditive, leftFootHit);
             }
-            else if (rightFootHit.point.y > leftFootHit.point.y)
+            else if (right_foot_y_delta > left_foot_y_delta)
             {
-                controllerCenterAdditive = -leftFootDisToHit - leftFootHeight;
-                newRightFootYAdditive = rightFootDisToHit + rightFootHeight + controllerCenterAdditive;
+                //controllerCenterAdditive = -leftFootDisToHit - leftFootHeight; CHANGE TO PELVIS AT SOMEPOINT
+                newPelvisYAdditive = left_foot_y_delta;
+                newRightFootYAdditive = right_foot_y_delta + left_foot_y_delta;
                 newRightHintYAdditive = calculateYHintAdditive(newRightFootYAdditive, rightFootHit);
             }
             else
@@ -190,14 +209,71 @@ public class FootCorrector : MonoBehaviour
                 addMovementSpeed = 15f;
                 if (leftFootHit.normal == new Vector3(0f, 1f, 0))
                 {
-                    controllerCenterAdditive = 0;
+                    //controllerCenterAdditive = 0;
+                    newPelvisYAdditive = 0;
                 }
                 else
                 {
-                    controllerCenterAdditive = Mathf.Abs(leftFootDisToHit) - leftFootHeight;
+                    //controllerCenterAdditive = Mathf.Abs(leftFootDisToHit) - leftFootHeight;
+                    newPelvisYAdditive = left_foot_y_delta;
                 }
             }
 
+            //create new pelvis point
+            pelvisYAdditive = Mathf.Lerp(currentPelvisYAdditive, newPelvisYAdditive, addMovementSpeed * Time.deltaTime);
+            Vector3 pelvisNewPostion = new Vector3(0, pelvisYAdditive, 0);
+            //pelvisRoot.localPosition = Vector3.MoveTowards(currentLocalPelvisPosition, pelvisNewPostion, footCorMovementSpeed * Time.deltaTime);
+
+            leftFootYAdditive = Mathf.Lerp(currentLeftFootYAdditive, newLeftFootYAdditive, addMovementSpeed * Time.deltaTime);
+            rightFootYAdditive = Mathf.Lerp(currentRightFootYAdditive, newRightFootYAdditive, addMovementSpeed * Time.deltaTime);
+            Vector3 leftFootNewPosition = new Vector3(BlenderLeftFootIK.position.x, BlenderLeftFootIK.position.y + leftFootYAdditive, BlenderLeftFootIK.position.z);
+            Vector3 rightFootNewPosition = new Vector3(BlenderRightFootIK.position.x, BlenderRightFootIK.position.y + rightFootYAdditive, BlenderRightFootIK.position.z);
+            unityLeftFootIK.position = Vector3.MoveTowards(currentLeftFootPosition, leftFootNewPosition, footCorMovementSpeed * Time.deltaTime);
+            unityRightFootIK.position = Vector3.MoveTowards(currentRightFootPosition, rightFootNewPosition, footCorMovementSpeed * Time.deltaTime);
+
+            unityLeftKneeIK.position = new Vector3(BlenderLeftKneeIK.position.x, BlenderLeftKneeIK.position.y + newLeftHintYAdditive, BlenderLeftKneeIK.position.z);
+            unityLeftKneeIK.localPosition = new Vector3(unityLeftKneeIK.localPosition.x - 4f, unityLeftKneeIK.localPosition.y, unityLeftKneeIK.localPosition.z + 100f);
+
+            unityRightKneeIK.position = new Vector3(BlenderRightKneeIK.position.x, BlenderRightKneeIK.position.y + newRightHintYAdditive, BlenderRightKneeIK.position.z);
+            unityRightKneeIK.localPosition = new Vector3(unityRightKneeIK.localPosition.x + 4f, unityRightKneeIK.localPosition.y, unityRightKneeIK.localPosition.z + 100f);
+
+            //set the current controllerCenter, feet IK target positions and Foot additives
+            currentLeftFootYAdditive = leftFootYAdditive;
+            currentRightFootYAdditive = rightFootYAdditive;
+            currentLeftFootPosition = unityLeftFootIK.position;
+            currentRightFootPosition = unityRightFootIK.position;
+
+            currentPelvisYAdditive = pelvisYAdditive;
+            currentLocalPelvisPosition = pelvisRoot.localPosition;
+        }
+        else
+        {
+
+            //Skirt Targeting needs this
+            leftFootHitNormalRef = new Vector3(0f, 0f, 0f);
+            rightFootHitNormalRef = new Vector3(0f, 0f, 0f);
+            //adjust center and feet position when falling
+            unityLeftFootIK.position = BlenderLeftFootIK.position;
+            unityRightFootIK.position = BlenderRightFootIK.position;
+            currentLeftFootPosition = unityLeftFootIK.position;
+            currentRightFootPosition = unityRightFootIK.position;
+            currentLeftFootYAdditive = 0f;
+            currentRightFootYAdditive = 0f;
+
+            currentPelvisYAdditive = 0f;
+            currentLocalPelvisPosition = new Vector3(0,0,0);
+
+            unityLeftKneeIK.position = new Vector3(BlenderLeftKneeIK.position.x, BlenderLeftKneeIK.position.y, BlenderLeftKneeIK.position.z);
+            unityRightKneeIK.position = new Vector3(BlenderRightKneeIK.position.x, BlenderRightKneeIK.position.y, BlenderRightKneeIK.position.z);
+            pelvisRoot.localPosition = new Vector3(0, 0, 0);
+
+            //adjust both feet angles for smooth transitions for falling
+            unityLeftFootIK.rotation = Quaternion.Lerp(currentLeftAngle, BlenderLeftFootIK.rotation, Time.deltaTime * footCorRotationSpeed / footCorRevRotSpeedDiv);
+            currentLeftAngle = unityLeftFootIK.rotation;
+            unityRightFootIK.rotation = Quaternion.Lerp(currentRightAngle, BlenderRightFootIK.rotation, Time.deltaTime * footCorRotationSpeed / footCorRevRotSpeedDiv);
+            currentRightAngle = unityRightFootIK.rotation;
+
+            addMovementSpeed = 15f;
         }
     }
 
@@ -206,7 +282,7 @@ public class FootCorrector : MonoBehaviour
         //Set up ray cast variables
         Vector3 leftRayDirection = Vector3.down;
         Vector3 rightRayDirection = Vector3.down;
-        float maxDistance = 4.0f + groundAdditive;
+        float maxDistance = .5f + groundAdditive;
 
         //Left Foot
         RaycastHit leftFootHit;
@@ -217,6 +293,8 @@ public class FootCorrector : MonoBehaviour
         RaycastHit rightFootHit;
         Vector3 rightFootOrigin = new Vector3(BlenderRightFootIK.position.x, BlenderRightFootIK.position.y + groundAdditive, BlenderRightFootIK.position.z);
         float rightFootHitMaxDistance = maxDistanceTester + groundAdditive;
+
+        
 
         //Case 1: Both feet are touching the ground (not necessarily the same ground with the same slope)
         if (isGrounded && Physics.Raycast(leftFootOrigin, leftRayDirection, out leftFootHit, leftFootHitMaxDistance, layerMask) && Physics.Raycast(rightFootOrigin, rightRayDirection, out rightFootHit, rightFootHitMaxDistance, layerMask) && leftFootHit.transform.tag == "Walkable" && rightFootHit.transform.tag == "Walkable")
@@ -238,6 +316,7 @@ public class FootCorrector : MonoBehaviour
                 Debug.DrawLine(rightFootOrigin, rightFootHit.point, Color.red);
             }
 
+            //
 
             //adjust left and right foot IK target angles
             Quaternion leftFootNewAngle = Quaternion.FromToRotation(transform.up, leftFootHit.normal) * BlenderLeftFootIK.rotation;
@@ -262,17 +341,21 @@ public class FootCorrector : MonoBehaviour
             float leftFootHeight = calculateFootHeight(leftFootHit, leftToeEnd, leftFoot, BlenderLeftFootIK.transform.position);
             float rightFootHeight = calculateFootHeight(rightFootHit, rightToeEnd, rightFoot, BlenderRightFootIK.transform.position);
 
+
+
+            //(footHit.point.y - blenderFootPosition.y)
+
             //determine controllerCenterAdditive and which foot needs an offset
             float controllerCenterAdditive = 0;
             if (leftFootHit.point.y > rightFootHit.point.y)
             {
-                controllerCenterAdditive = -rightFootDisToHit - rightFootHeight;
+                //controllerCenterAdditive = -rightFootDisToHit - rightFootHeight; CHANGE TO PELVIS AT SOMEPOINT
                 newLeftFootYAdditive = leftFootDisToHit + leftFootHeight + controllerCenterAdditive;
                 newLeftHintYAdditive = calculateYHintAdditive(newLeftFootYAdditive, leftFootHit);
             }
             else if (rightFootHit.point.y > leftFootHit.point.y)
             {
-                controllerCenterAdditive = -leftFootDisToHit - leftFootHeight;
+                //controllerCenterAdditive = -leftFootDisToHit - leftFootHeight; CHANGE TO PELVIS AT SOMEPOINT
                 newRightFootYAdditive = rightFootDisToHit + rightFootHeight + controllerCenterAdditive;
                 newRightHintYAdditive = calculateYHintAdditive(newRightFootYAdditive, rightFootHit);
             }
