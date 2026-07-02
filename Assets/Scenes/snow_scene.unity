@@ -4243,7 +4243,7 @@ MonoBehaviour:
   parentFrontRight: {fileID: 2026139327}
   parentFrontSideLeft: {fileID: 1351308705}
   ParentFrontSideRight: {fileID: 898574440}
-  moveSpeed: 4
+  moveSpeed: 40
   scaleMoveSpeed: 2
   physicsWeightSpeed: 2
   leftShinBone: {fileID: 249363898}
