@@ -27,7 +27,7 @@ namespace DitzelGames.FastIK
         public Transform Target;
         public Transform Pole;
         public Transform blenderKnee;
-        public Transform Stupid;
+        public Transform blenderFoot;
 
         /// <summary>
         /// Solver iterations per update
@@ -81,7 +81,7 @@ namespace DitzelGames.FastIK
             StartRotationBone = new Quaternion[ChainLength];
             //find root
             //Root = transform;
-            Root = Stupid.transform;
+            Root = blenderFoot.transform;
             //for (var i = 0; i <= ChainLength; i++)
             for (var i = 0; i <= ChainLength; i++)
             {
@@ -103,7 +103,7 @@ namespace DitzelGames.FastIK
 
             //init data
             //var current = transform;
-            var current = Stupid.transform;
+            var current = blenderFoot.transform;
             CompleteLength = 0;
             for (var i = Bones.Length - 1; i >= 0; i--)
             {
@@ -143,6 +143,7 @@ namespace DitzelGames.FastIK
         void LateUpdate()
         {
             ResolveIK();
+
         }
 
 
@@ -202,7 +203,7 @@ namespace DitzelGames.FastIK
                         break;
                 }
             }
-
+            
             //move towards pole
             if (Pole != null)
             {
@@ -214,13 +215,14 @@ namespace DitzelGames.FastIK
                     var projectedBone = plane.ClosestPointOnPlane(Positions[i]);
                     var angle = Vector3.SignedAngle(projectedBone - Positions[i - 1], projectedPole - Positions[i - 1], plane.normal);
                     Positions[i] = Quaternion.AngleAxis(angle, plane.normal) * (Positions[i] - Positions[i - 1]) + Positions[i - 1];
+                    Debug.DrawRay(Positions[i], plane.normal * 0.2f, Color.red);
                 }
             }
 
             //set position & rotation
             for (int i = 0; i < Positions.Length; i++)
             {
-                //if (Bones[i] != Stupid)
+                //if (Bones[i] != blenderFoot)
                 //{
                     if (i == Positions.Length - 1)
                     {
@@ -271,12 +273,12 @@ namespace DitzelGames.FastIK
             else
                 current.rotation = Root.rotation * rotation;
         }
-        /*
+        
         void OnDrawGizmos()
         {
 #if UNITY_EDITOR
             //var current = this.transform;
-            var current = Stupid.transform;
+            var current = blenderFoot.transform;
             if (Draw) 
             {
                 for (int i = 0; i < ChainLength && current != null && current.parent != null; i++)
@@ -290,7 +292,7 @@ namespace DitzelGames.FastIK
             }
             
 #endif
-        }*/
+        }
 
     }
 }

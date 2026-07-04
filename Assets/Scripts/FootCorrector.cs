@@ -5,10 +5,12 @@ using UnityEngine.U2D;
 
 public class FootCorrector : MonoBehaviour
 {
+    public bool Active = true;
     [SerializeField]
     private Transform 
         jennyOriginBase,
         jennySpine,
+        jennyRefSpine,
         BlenderLeftFootIK, 
         BlenderRightFootIK, 
         BlenderLeftKneeIK, 
@@ -54,7 +56,6 @@ public class FootCorrector : MonoBehaviour
     private Quaternion currentSpineAngle;
     private Vector3 currentSpineNormal = Vector3.up;
     private float maxAdditiveXRotation = 10f;
-
 
     //Items needed for Skirt Targeting
     [HideInInspector]
@@ -135,7 +136,7 @@ public class FootCorrector : MonoBehaviour
 
 
         //Case 1: Both feet are touching the ground (not necessarily the same ground with the same slope)
-        if (isGrounded && Physics.Raycast(leftFootOrigin, leftRayDirection, out leftFootHit, leftFootHitMaxDistance, layerMask) && Physics.Raycast(rightFootOrigin, rightRayDirection, out rightFootHit, rightFootHitMaxDistance, layerMask) && leftFootHit.transform.tag == "Walkable" && rightFootHit.transform.tag == "Walkable")
+        if (Active && isGrounded && Physics.Raycast(leftFootOrigin, leftRayDirection, out leftFootHit, leftFootHitMaxDistance, layerMask) && Physics.Raycast(rightFootOrigin, rightRayDirection, out rightFootHit, rightFootHitMaxDistance, layerMask) && leftFootHit.transform.tag == "Walkable" && rightFootHit.transform.tag == "Walkable")
         {
             //Skirt Targeting needs this
             leftFootHitNormalRef = leftFootHit.normal;
@@ -200,7 +201,7 @@ public class FootCorrector : MonoBehaviour
                 //print(rightFootHeight);
                 if (leftFootHit.normal == new Vector3(0f, 1f, 0))
                 {
-                    newPelvisYAdditive = 0;
+                    newPelvisYAdditive = -.02f;
                 }
                 else
                 {
@@ -304,9 +305,18 @@ public class FootCorrector : MonoBehaviour
             currentLeftFootYAdditive = 0f;
             currentRightFootYAdditive = 0f;
 
+            jennySpine.position = jennyRefSpine.position;
+            jennySpine.rotation = jennyRefSpine.rotation;
+
             currentPelvisYAdditive = 0f;
             currentLocalPelvisPosition = new Vector3(0,0,0);
             pelvisRoot.localPosition = new Vector3(0, 0, 0);
+            float hintOffsetX = 0f;
+
+            if (jennyAnimator.GetFloat("Speed") > .0001)
+            {
+                hintOffsetX = .4f;
+            }
 
             currentHintXAdd = 0;
             currentHintYRightAdd = 0;
@@ -314,6 +324,9 @@ public class FootCorrector : MonoBehaviour
 
             unityLeftKneeIK.position = new Vector3(BlenderLeftKneeIK.position.x, BlenderLeftKneeIK.position.y, BlenderLeftKneeIK.position.z);
             unityRightKneeIK.position = new Vector3(BlenderRightKneeIK.position.x, BlenderRightKneeIK.position.y, BlenderRightKneeIK.position.z);
+
+            unityLeftKneeIK.localPosition = new Vector3(unityLeftKneeIK.localPosition.x - hintOffsetX, unityLeftKneeIK.localPosition.y, unityLeftKneeIK.localPosition.z);
+            unityRightKneeIK.localPosition = new Vector3(unityRightKneeIK.localPosition.x + hintOffsetX, unityRightKneeIK.localPosition.y, unityRightKneeIK.localPosition.z);
 
             //adjust both feet angles for smooth transitions for falling
             unityLeftFootIK.rotation = Quaternion.Lerp(currentLeftAngle, BlenderLeftFootIK.rotation, Time.deltaTime * footCorRotationSpeed / footCorRevRotSpeedDiv);

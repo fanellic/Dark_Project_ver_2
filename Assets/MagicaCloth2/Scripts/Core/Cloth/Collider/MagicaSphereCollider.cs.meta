@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f2b68b2c7953ebb479b78627f19a6ccb
+AssetOrigin:
+  serializedVersion: 1
+  productId: 242307
+  packageName: Magica Cloth 2
+  packageVersion: 2.18.1
+  assetPath: Assets/MagicaCloth2/Scripts/Core/Cloth/Collider/MagicaSphereCollider.cs
+  uploadId: 893596
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
