@@ -65,6 +65,19 @@ namespace DitzelGames.FastIK
 
         void Init()
         {
+            int validBoneCount = 0;
+            Transform checkCurrent = blenderFoot.transform;
+            for (int i = 0; i <= ChainLength + 1; i++)
+            {
+                if (checkCurrent == null) break;
+                if (checkCurrent != blenderKnee)
+                {
+                    validBoneCount++;
+                }
+                checkCurrent = checkCurrent.parent;
+            }
+
+
             //initial array
             /*
             Bones = new Transform[ChainLength + 1];
@@ -105,6 +118,7 @@ namespace DitzelGames.FastIK
             //var current = transform;
             var current = blenderFoot.transform;
             CompleteLength = 0;
+            /*
             for (var i = Bones.Length - 1; i >= 0; i--)
             {
                 
@@ -132,8 +146,41 @@ namespace DitzelGames.FastIK
                 }
 
                     current = current.parent;
-            }
+            }*/
+            for (int i = Bones.Length - 1; i >= 0; i--)
+            {
+                // Skip the knee bone (as your original logic intended)
+                if (current == blenderKnee)
+                {
+                    current = current.parent;
+                    i++; // compensate for skipped assignment
+                    continue;
+                }
 
+                Bones[i] = current;
+
+                StartRotationBone[i] = GetRotationRootSpace(current);
+
+                if (i == Bones.Length - 1)
+                {
+                    // Leaf bone (end effector)
+                    StartDirectionSucc[i] =
+                        GetPositionRootSpace(Target) - GetPositionRootSpace(current);
+                }
+                else
+                {
+                    // Mid/root chain bone
+                    Vector3 dir =
+                        GetPositionRootSpace(Bones[i + 1]) - GetPositionRootSpace(current);
+
+                    StartDirectionSucc[i] = dir;
+                    BonesLength[i] = dir.magnitude;
+
+                    CompleteLength += BonesLength[i];
+                }
+
+                current = current.parent;
+            }
 
 
         }
@@ -274,6 +321,7 @@ namespace DitzelGames.FastIK
                 current.rotation = Root.rotation * rotation;
         }
         
+        /*
         void OnDrawGizmos()
         {
 #if UNITY_EDITOR
@@ -292,7 +340,7 @@ namespace DitzelGames.FastIK
             }
             
 #endif
-        }
+        }*/
 
     }
 }

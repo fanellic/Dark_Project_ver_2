@@ -307,6 +307,7 @@ public class FootCorrector : MonoBehaviour
 
             jennySpine.position = jennyRefSpine.position;
             jennySpine.rotation = jennyRefSpine.rotation;
+            jennySpine.localPosition = new Vector3(jennyRefSpine.localPosition.x, jennyRefSpine.localPosition.y-.01f, jennyRefSpine.localPosition.z);
 
             currentPelvisYAdditive = 0f;
             currentLocalPelvisPosition = new Vector3(0,0,0);
