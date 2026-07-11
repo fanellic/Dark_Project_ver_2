@@ -11,20 +11,6 @@ public class SkirtTargeting : MonoBehaviour
 
     [SerializeField] private Transform skirtTargetTransform;
 
-    [SerializeField] private skirtPhysicsRotater physicsRotater3, physicsRotater4, physicsRotater5;
-
-    //private float physicsRotater3intBone0Weight, physicsRotater3intBone1Weight, physicsRotater3intBone2Weight;
-
-    //private float physicsRotater4intBone0Weight, physicsRotater4intBone1Weight, physicsRotater4intBone2Weight;
-
-    //private float physicsRotater5intBone0Weight, physicsRotater5intBone1Weight, physicsRotater5intBone2Weight;
-
-    //private float physicsRotater3CurBone0Weight, physicsRotater3CurBone1Weight, physicsRotater3CurBone2Weight;
-
-    //private float physicsRotater4CurBone0Weight, physicsRotater4CurBone1Weight, physicsRotater4CurBone2Weight;
-
-    //private float physicsRotater5CurBone0Weight, physicsRotater5CurBone1Weight, physicsRotater5CurBone2Weight;
-
     [SerializeField] private Transform parentVeryFront, parentFrontLeft, parentFrontRight, parentFrontSideLeft, ParentFrontSideRight;
 
     private List<GameObject> skirtTargets = new List<GameObject>();
@@ -35,7 +21,7 @@ public class SkirtTargeting : MonoBehaviour
 
     public float dumb = 1f;
 
-    [SerializeField] private float moveSpeed = 2f, scaleMoveSpeed = 2f, physicsWeightSpeed = 2f;
+    [SerializeField] private float moveSpeed = 2f, scaleMoveSpeed = 2f;
 
     [SerializeField] private Transform leftShinBone, rightShinBone, leftFootIKTarget, rightFootIKTarget;
 
@@ -56,12 +42,6 @@ public class SkirtTargeting : MonoBehaviour
     private Stack<bool> goingUphill = new Stack<bool>();
 
     private float parentVeryFrontCurScaleY = 1f, parentFrontLeftCurScaleY = 1f, parentFrontRightCurScaleY = 1f, parentFrontSideLeftCurScaleY = 1f, parentFrontSideRightCurScaleY = 1f;
-
-    private float stupid=4f;
-
-    [SerializeField] private float moreStupid = -.6f;
-
-    [SerializeField] private float lowerBone0Weight = 0f, lowerBone1Weight = .1f, lowerBone2Weight = .2f;
 
     void Start()
     {
